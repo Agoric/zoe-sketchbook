@@ -1,0 +1,30 @@
+{
+  "name": "zoe-sketch",
+  "version": "0.0.1",
+  "description": "Draft and lightly test your Zoe smart contact code",
+  "main": "index.js",
+  "repository": "https://github.com/Agoric/zoe-sketch.git",
+  "author": "Agoric",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@agoric/ertp": "^0.2.0",
+    "@agoric/zoe": "^0.1.1",
+    "esm": "^3.2.25"
+  },
+  "devDependencies": {
+    "eslint": "^6.7.2",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-jessie": "^0.0.3",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-prettier": "^3.1.1",
+    "prettier": "^1.19.1",
+    "tap-spec": "^5.0.0",
+    "tape": "^4.11.0",
+    "tape-promise": "^4.0.0"
+  },
+  "scripts": {
+    "test": "tape -r esm 'test/**/*.test.js' | tap-spec",
+    "lint-fix": "eslint --fix '**/*.{js,jsx}'"
+  }
+}
