@@ -1,9 +1,9 @@
 {
-  "name": "zoe-sketch",
+  "name": "zoe-sketchbook",
   "version": "0.0.1",
   "description": "Draft and lightly test your Zoe smart contact code",
   "main": "index.js",
-  "repository": "https://github.com/Agoric/zoe-sketch.git",
+  "repository": "https://github.com/Agoric/zoe-sketchbook.git",
   "author": "Agoric",
   "license": "Apache-2.0",
   "dependencies": {
