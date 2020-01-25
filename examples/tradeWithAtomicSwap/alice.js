@@ -45,9 +45,10 @@ const makeAlice = (zoe, installations, walletData) => {
       const bobInviteP = seat.makeFirstOffer();
       wallet.send('bob', 'invite', bobInviteP);
 
-      payout.then(([moolaPayout, simoleanPayout]) => {
+      return payout.then(([moolaPayout, simoleanPayout]) => {
         wallet.deposit('moola', moolaPayout);
         wallet.deposit('simolean', simoleanPayout);
+        return 'swap successful';
       });
     },
   });

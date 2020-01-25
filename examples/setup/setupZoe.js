@@ -2,14 +2,12 @@ import { makeZoe } from '@agoric/zoe';
 import harden from '@agoric/harden';
 import bundleSource from '@agoric/bundle-source';
 
-// We'll import the contracts from the Zoe package rather than use the
-// copies we have in `examples/`
-import automaticRefund from '@agoric/zoe/src/contracts/automaticRefund';
-import coveredCall from '@agoric/zoe/src/contracts/coveredCall';
-import publicAuction from '@agoric/zoe/src/contracts/publicAuction';
-import atomicSwap from '@agoric/zoe/src/contracts/atomicSwap';
-import simpleExchange from '@agoric/zoe/src/contracts/simpleExchange';
-import autoswap from '@agoric/zoe/src/contracts/autoswap';
+const automaticRefund = `${__dirname}/../zoe-contracts-copied/automaticRefund.js`;
+const coveredCall = `${__dirname}/../zoe-contracts-copied/coveredCall.js`;
+const publicAuction = `${__dirname}/../zoe-contracts-copied/publicAuction.js`;
+const atomicSwap = `${__dirname}/../zoe-contracts-copied/atomicSwap.js`;
+const simpleExchange = `${__dirname}/../zoe-contracts-copied/simpleExchange.js`;
+const autoswap  = `${__dirname}/../zoe-contracts-copied/autoswap.js`;
 
 // Normally, Zoe would already exist and we would have a long-lived
 // reference to it. However, here in the sketchbook, we will need to
@@ -17,8 +15,8 @@ import autoswap from '@agoric/zoe/src/contracts/autoswap';
 export const setupZoe = async () => {
   const zoe = makeZoe({ require });
 
-  const packAndInstall = contract =>
-    bundleSource(contract).then(({ source, moduleFormat }) =>
+  const packAndInstall = contractRoot =>
+    bundleSource(contractRoot).then(({ source, moduleFormat }) =>
       zoe.install(source, moduleFormat),
     );
 

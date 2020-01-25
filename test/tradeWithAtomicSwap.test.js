@@ -1,19 +1,26 @@
+import { test } from 'tape-promise/tape';
 import harden from '@agoric/harden';
 
 import { makeRegistrar } from '@agoric/ertp/more/registrar/registrar';
 
-import { setupZoe } from '../setup/setupZoe';
-import { moolaMint, moolaAssay } from '../setup/moolaMint';
-import { simoleanMint, simoleanAssay } from '../setup/simoleanMint';
-import { makeInitialPayment } from '../setup/initialPayments';
+import { setupZoe } from '../examples/setup/setupZoe';
+import { moolaMint, moolaAssay } from '../examples/setup/moolaMint';
+import { simoleanMint, simoleanAssay } from '../examples/setup/simoleanMint';
+import { makeInitialPayment } from '../examples/setup/initialPayments';
 
-import makeBob from './bob';
-import makeAlice from './alice';
+import makeBob from '../examples/tradeWithAtomicSwap/bob';
+import makeAlice from '../examples/tradeWithAtomicSwap/alice';
 
-const performTrade = async () => {
+test('perform trade using atomic swap contract', async t => {
   const { zoe, installations } = await setupZoe();
 
   const inviteAssay = zoe.getInviteAssay();
+
+  const moolaUnitOps = moolaAssay.getUnitOps();
+  const simoleanUnitOps = simoleanAssay.getUnitOps();
+
+  const moola = moolaAssay.getUnitOps().make;
+  const simoleans = simoleanAssay.getUnitOps().make;
 
   const registrar = makeRegistrar();
   const inviteAssayRegKey = registrar.register('inviteAssay', inviteAssay);
@@ -48,6 +55,18 @@ const performTrade = async () => {
   bob.connectWith('alice', aliceInbox);
   alice.connectWith('bob', bobInbox);
 
-  // kick off the swap
-  alice.startSwap();
-};
+  await alice.startSwap();
+
+  const aliceWallet = alice.getWallet();
+  const bobWallet = bob.getWallet();
+
+  t.ok(moolaUnitOps.equal(aliceWallet.getBalance('moola'), moola(0)));
+  t.ok(
+    simoleanUnitOps.equal(aliceWallet.getBalance('simoleans'), simoleans(7)),
+  );
+
+  t.ok(moolaUnitOps.equal(bobWallet.getBalance('moola'), moola(3)));
+  t.ok(simoleanUnitOps.equal(bobWallet.getBalance('simoleans'), simoleans(0)));
+
+  t.end();
+});

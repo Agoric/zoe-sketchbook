@@ -19,8 +19,6 @@ const makeWallet = initialWalletData => {
   // contacts
   const petnameToInbox = makePrivateName();
 
-  const { registrar } = initialWalletData;
-
   // external facet. Arguments should not be trusted.
   const inbox = harden({
     receive: (assayRegKey, payment) => {
@@ -33,6 +31,7 @@ const makeWallet = initialWalletData => {
     },
   });
 
+  // This API is for internal use and is in terms of user's petnames
   const wallet = harden({
     deposit: (pursePetName, payment) => {
       const purse = petnameToPurse.get(pursePetName);
@@ -68,6 +67,7 @@ const makeWallet = initialWalletData => {
     },
     registerCallback: (assayPetname, callback) =>
       assayPetnameToCallback.init(assayPetname, callback),
+    getBalance: pursePetname => petnameToPurse.get(pursePetname).getBalance(),
   });
 
   // initialize with starting assays and purses
