@@ -3,6 +3,8 @@
 An easy way to get started building JavaScript smart contracts on Zoe.
 Draft and lightly test your smart contact code here.
 
+*NOTE: THIS REPOSITORY IS STILL IN PROGRESS AND IS NOT READY FOR USE*
+
 ## Getting started
 
 ```
