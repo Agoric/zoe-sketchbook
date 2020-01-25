@@ -1,54 +1,56 @@
 import harden from '@agoric/harden';
+import makeWallet from '../setup/wallet';
 
-export const makeAlice = (
-  zoe,
-  installations,
-  moolaAssay,
-  simoleanAssay,
-  bobInbox,
-) =>
-  harden({
-    performSwap: async moolaPayment => {
+const makeAlice = (zoe, installations, walletData) => {
+  const wallet = makeWallet(walletData);
+
+  const moola = wallet.getUnitOps('moola').make;
+  const simoleans = wallet.getUnitsOps('simoleans').make;
+
+  const moolaAssay = wallet.getAssay('moola');
+  const simoleanAssay = wallet.getAssay('simolean');
+
+  // Exposed to our tests
+  return harden({
+    getInbox: wallet.getInbox,
+    connectWith: wallet.connectWith,
+    startSwap: async () => {
       // Alice creates an atomicSwap instance by using an already
       // installed contract
       const invite = await zoe.makeInstance(installations.atomicSwap, {
         assays: [moolaAssay, simoleanAssay],
       });
 
-      // Alice escrows with zoe
       const offerRules = harden({
         payoutRules: [
           {
             kind: 'offerAtMost',
-            units: moolaAssay.makeUnits(3),
+            units: moola(3),
           },
           {
             kind: 'wantAtLeast',
-            units: simoleanAssay.makeUnits(7),
+            units: simoleans(7),
           },
         ],
         exitRule: {
           kind: 'onDemand',
         },
       });
-      const payments = [moolaPayment, undefined];
+      const payments = [wallet.withdraw('moola', moola(3)), undefined];
 
       // Alice redeems her invite and escrows with Zoe
-      const { seat: aliceSeat, payout: alicePayoutP } = await zoe.redeem(
-        invite,
-        offerRules,
-        payments,
-      );
+      const { seat, payout } = await zoe.redeem(invite, offerRules, payments);
 
       // Alice makes the first offer in the swap.
-      const bobInviteP = aliceSeat.makeFirstOffer();
-      bobInbox.receive(bobInviteP);
-      const [moolaPayoutP, simoleanPayoutP] = await alicePayoutP;
+      const bobInviteP = seat.makeFirstOffer();
+      wallet.send('bob', 'invite', bobInviteP);
 
-      // Alice deposits her payout in new purses
-      const moolaPurse = moolaAssay.makeEmptyPurse();
-      const simoleanPurse = simoleanAssay.makeEmptyPurse();
-      await moolaPurse.depositAll(moolaPayoutP);
-      await simoleanPurse.depositAll(simoleanPayoutP);
+      payout.then(([moolaPayout, simoleanPayout]) => {
+        wallet.deposit('moola', moolaPayout);
+        wallet.deposit('simolean', simoleanPayout);
+      });
     },
   });
+};
+
+export default makeAlice;

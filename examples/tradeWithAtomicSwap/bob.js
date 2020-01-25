@@ -1,61 +1,69 @@
 import harden from '@agoric/harden';
+import { insist } from '@agoric/ertp/util/insist';
 
-export const makeBob = (zoe,installations,moolaAssay,simoleanAssay) => harden({
-  getBobInbox: {
-    receive: () => {
+import canTradeWith from '../setup/canTradeWith';
+import makeWallet from '../setup/wallet';
 
-    }
-  },
-  performTrade: () => {
-    const inviteAssay = zoe.getInviteAssay();
-    const bobExclusiveInvite = await inviteAssay.claimAll(bobInviteP);
-    const bobInviteExtent = bobExclusiveInvite.getBalance().extent;
-  
-    const {
-      installationHandle: bobInstallationId,
-      terms: bobTerms,
-    } = zoe.getInstance(bobInviteExtent.instanceHandle);
-  
-    t.equals(bobInstallationId, installationHandle);
-    t.deepEquals(bobTerms.assays, assays);
-    t.deepEquals(bobInviteExtent.offerMadeRules, aliceOfferRules.payoutRules);
-  
-    const bobOfferRules = harden({
+const makeBob = (zoe, installations, walletData) => {
+  const wallet = makeWallet(walletData);
+
+  const matchOffer = async inviteP => {
+    const moola = wallet.getUnitOps('moola').make;
+    const simoleans = wallet.getUnitsOps('simoleans').make;
+
+    const inviteAssay = wallet.getAssay('invite');
+    const moolaAssay = wallet.getAssay('moola');
+    const simoleanAssay = wallet.getAssay('simolean');
+
+    const exclInvite = await inviteAssay.claimAll(inviteP);
+    const { extent } = exclInvite.getBalance();
+    const { installationHandle, terms } = zoe.getInstance(
+      extent.instanceHandle,
+    );
+
+    const intendedOfferRules = harden({
       payoutRules: [
         {
           kind: 'wantAtLeast',
-          units: bobTerms.assays[0].makeUnits(3),
+          units: moola(3),
         },
         {
           kind: 'offerAtMost',
-          units: bobTerms.assays[1].makeUnits(7),
+          units: simoleans(7),
         },
       ],
       exitRule: {
         kind: 'onDemand',
       },
     });
-    const bobPayments = [undefined, bobSimoleanPayment];
-  
-    // 6: Bob escrows with zoe
-    const { seat: bobSeat, payout: bobPayoutP } = await zoe.redeem(
-      bobExclusiveInvite,
-      bobOfferRules,
-      bobPayments,
+
+    insist(installationHandle === installations.atomicSwap)`wrong installation`;
+    insist(terms.assays[0], moolaAssay)`wrong assay`;
+    insist(terms.assays[1], simoleanAssay)`wrong assay`;
+    insist(
+      canTradeWith(extent.offerMadeRules, intendedOfferRules.payoutRules),
+    )`wrong first offer`;
+
+    const payments = [undefined, wallet.withdraw('simolean', simoleans(7))];
+
+    const { seat, payout } = await zoe.redeem(
+      exclInvite,
+      intendedOfferRules,
+      payments,
     );
-  
-    // 7: Bob makes an offer with his escrow receipt
-    const bobOfferResult = await bobSeat.matchOffer();
-  
-    t.equals(
-      bobOfferResult,
-      'The offer has been accepted. Once the contract has been completed, please check your payout',
-    );
-    const bobPayout = await bobPayoutP;
-    const [bobMoolaPayout, bobSimoleanPayout] = await Promise.all(bobPayout);
-    
-        // Bob deposits his original payments to ensure he can
-        await bobMoolaPurse.depositAll(bobMoolaPayout);
-        await bobSimoleanPurse.depositAll(bobSimoleanPayout);
-  }
-});
+
+    payout.then(([moolaPayout, simoleanPayout]) => {
+      wallet.deposit('moola', moolaPayout);
+      wallet.deposit('simolean', simoleanPayout);
+    });
+
+    return seat.matchOffer();
+  };
+
+  wallet.registerCallback('invite', matchOffer);
+
+  // exposed to our tests
+  return harden({ getInbox: wallet.getInbox, connectWith: wallet.connectWith });
+};
+
+export default makeBob;
