@@ -60,13 +60,13 @@ test('perform trade using atomic swap contract', async t => {
   const aliceWallet = alice.getWallet();
   const bobWallet = bob.getWallet();
 
-  t.ok(moolaUnitOps.equal(aliceWallet.getBalance('moola'), moola(0)));
+  t.ok(moolaUnitOps.equals(aliceWallet.getBalance('moola'), moola(0)));
   t.ok(
-    simoleanUnitOps.equal(aliceWallet.getBalance('simoleans'), simoleans(7)),
+    simoleanUnitOps.equals(aliceWallet.getBalance('simolean'), simoleans(7)),
   );
 
-  t.ok(moolaUnitOps.equal(bobWallet.getBalance('moola'), moola(3)));
-  t.ok(simoleanUnitOps.equal(bobWallet.getBalance('simoleans'), simoleans(0)));
+  t.ok(moolaUnitOps.equals(bobWallet.getBalance('moola'), moola(3)));
+  t.ok(simoleanUnitOps.equals(bobWallet.getBalance('simolean'), simoleans(0)));
 
   t.end();
 });

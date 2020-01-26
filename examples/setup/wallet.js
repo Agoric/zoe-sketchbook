@@ -1,5 +1,5 @@
 import harden from '@agoric/harden';
-import { makePrivateName } from '@agoric/ertp/util/PrivateName';
+import makeStore from './store';
 
 // {
 //   assay,
@@ -8,16 +8,16 @@ import { makePrivateName } from '@agoric/ertp/util/PrivateName';
 // }
 
 const makeWallet = initialWalletData => {
-  const petnameToPurse = makePrivateName();
-  const petnameToAssay = makePrivateName();
-  const petnameToUnitOps = makePrivateName();
-  const regKeyToAssayPetname = makePrivateName();
-  const assayPetnameToRegKey = makePrivateName();
+  const petnameToPurse = makeStore();
+  const petnameToAssay = makeStore();
+  const petnameToUnitOps = makeStore();
+  const regKeyToAssayPetname = makeStore();
+  const assayPetnameToRegKey = makeStore();
 
-  const assayPetnameToCallback = makePrivateName();
+  const assayPetnameToCallback = makeStore();
 
   // contacts
-  const petnameToInbox = makePrivateName();
+  const petnameToInbox = makeStore();
 
   // external facet. Arguments should not be trusted.
   const inbox = harden({
@@ -26,8 +26,13 @@ const makeWallet = initialWalletData => {
       // TODO: have more than one purse per assay
       const purse = petnameToPurse.get(assayPetname);
 
-      const callback = assayPetnameToCallback(assayPetname);
-      purse.depositAll(payment).then(callback);
+      if (assayPetnameToCallback.has(assayPetname)) {
+        const callback = assayPetnameToCallback.get(assayPetname);
+        const assay = petnameToAssay.get(assayPetname);
+        assay.claimAll(payment).then(callback);
+      } else {
+        purse.depositAll(payment);
+      }
     },
   });
 
@@ -39,12 +44,12 @@ const makeWallet = initialWalletData => {
     },
     withdraw: (pursePetName, units) => {
       const purse = petnameToPurse.get(pursePetName);
-      purse.withdraw(units);
+      return purse.withdraw(units);
     },
     addAssay: (assayPetname, regKey, assay) => {
       petnameToAssay.init(assayPetname, assay);
-      regKeyToAssayPetname(regKey, assayPetname);
-      assayPetnameToRegKey(assayPetname, regKey);
+      regKeyToAssayPetname.init(regKey, assayPetname);
+      assayPetnameToRegKey.init(assayPetname, regKey);
       petnameToUnitOps.init(assayPetname, assay.getUnitOps());
     },
     makeEmptyPurse: (assayPetname, pursePetname, memo = 'purse') => {
@@ -52,7 +57,7 @@ const makeWallet = initialWalletData => {
       const purse = assay.makeEmptyPurse(memo);
       petnameToPurse.init(pursePetname, purse);
     },
-    getUnitOps: petnameToUnitOps.get,
+    getUnitOps: petname => petnameToUnitOps.get(petname),
     getAssay: petnameToAssay.get,
 
     getInbox: () => inbox,

@@ -21,12 +21,12 @@ export const setupZoe = async () => {
     );
 
   const installations = {
-    automaticRefund: packAndInstall(automaticRefund),
-    coveredCall: packAndInstall(coveredCall),
-    publicAuction: packAndInstall(publicAuction),
-    atomicSwap: packAndInstall(atomicSwap),
-    simpleExchange: packAndInstall(simpleExchange),
-    autoswap: packAndInstall(autoswap),
+    automaticRefund: await packAndInstall(automaticRefund),
+    coveredCall: await packAndInstall(coveredCall),
+    publicAuction: await packAndInstall(publicAuction),
+    atomicSwap: await packAndInstall(atomicSwap),
+    simpleExchange: await packAndInstall(simpleExchange),
+    autoswap: await packAndInstall(autoswap),
   };
 
   return harden({ zoe, installations });

@@ -8,15 +8,16 @@ const makeBob = (zoe, installations, walletData) => {
   const wallet = makeWallet(walletData);
 
   const matchOffer = async inviteP => {
-    const moola = wallet.getUnitOps('moola').make;
-    const simoleans = wallet.getUnitsOps('simoleans').make;
+    const moolaUnitOps = wallet.getUnitOps('moola');
+    const simoleanUnitOps = wallet.getUnitOps('simolean');
 
-    const inviteAssay = wallet.getAssay('invite');
+    const moola = moolaUnitOps.make;
+    const simoleans = simoleanUnitOps.make;
+
     const moolaAssay = wallet.getAssay('moola');
     const simoleanAssay = wallet.getAssay('simolean');
 
-    const exclInvite = await inviteAssay.claimAll(inviteP);
-    const { extent } = exclInvite.getBalance();
+    const { extent } = inviteP.getBalance();
     const { installationHandle, terms } = zoe.getInstance(
       extent.instanceHandle,
     );
@@ -40,14 +41,19 @@ const makeBob = (zoe, installations, walletData) => {
     insist(installationHandle === installations.atomicSwap)`wrong installation`;
     insist(terms.assays[0], moolaAssay)`wrong assay`;
     insist(terms.assays[1], simoleanAssay)`wrong assay`;
+    const unitOpsArray = harden([moolaUnitOps, simoleanUnitOps]);
     insist(
-      canTradeWith(extent.offerMadeRules, intendedOfferRules.payoutRules),
+      canTradeWith(
+        unitOpsArray,
+        extent.offerMadeRules,
+        intendedOfferRules.payoutRules,
+      ),
     )`wrong first offer`;
 
     const payments = [undefined, wallet.withdraw('simolean', simoleans(7))];
 
     const { seat, payout } = await zoe.redeem(
-      exclInvite,
+      inviteP,
       intendedOfferRules,
       payments,
     );
@@ -63,7 +69,11 @@ const makeBob = (zoe, installations, walletData) => {
   wallet.registerCallback('invite', matchOffer);
 
   // exposed to our tests
-  return harden({ getInbox: wallet.getInbox, connectWith: wallet.connectWith });
+  return harden({
+    getWallet: () => wallet,
+    getInbox: wallet.getInbox,
+    connectWith: wallet.connectWith,
+  });
 };
 
 export default makeBob;

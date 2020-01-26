@@ -5,13 +5,14 @@ const makeAlice = (zoe, installations, walletData) => {
   const wallet = makeWallet(walletData);
 
   const moola = wallet.getUnitOps('moola').make;
-  const simoleans = wallet.getUnitsOps('simoleans').make;
+  const simoleans = wallet.getUnitOps('simolean').make;
 
   const moolaAssay = wallet.getAssay('moola');
   const simoleanAssay = wallet.getAssay('simolean');
 
   // Exposed to our tests
   return harden({
+    getWallet: () => wallet,
     getInbox: wallet.getInbox,
     connectWith: wallet.connectWith,
     startSwap: async () => {
