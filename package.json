@@ -10,6 +10,7 @@
     "@agoric/bundle-source": "^1.0.4",
     "@agoric/ertp": "^0.2.0",
     "@agoric/harden": "^0.0.4",
+    "@agoric/nat": "^3.0.1",
     "@agoric/zoe": "^0.2.0",
     "esm": "^3.2.25"
   },
