@@ -3,10 +3,12 @@ import harden from '@agoric/harden';
 import makePromise from '@agoric/make-promise';
 import { makeZoeHelpers, defaultAcceptanceMsg } from './helpers/zoeHelpers';
 
+/**  EDIT THIS CONTRACT WITH YOUR OWN BUSINESS LOGIC */
+
 /**
- * The SimpleExchange uses Asset and Price as its keywords. In usage,
- * they're somewhat symmetrical. Participants will be buying or
- * selling in both directions.
+ * This contract is like the simpleExchange contract. The SimpleExchange uses
+ * Asset and Price as its keywords. In usage, they're somewhat symmetrical.
+ * Participants will be buying or selling in both directions.
  *
  * { give: { 'Asset', simoleans(5) }, want: { 'Price', quatloos(3) } }
  * { give: { 'Price', quatloos(8) }, want: { 'Asset', simoleans(3) } }
@@ -91,6 +93,8 @@ export const makeContract = harden(zoe => {
 
   const makeInvite = () => {
     const seat = harden({
+      // This code might be modified to support immediate_or_cancel. Current
+      // implementation is effectively fill_or_kill.
       addOrder: () => {
         const buyAssetForPrice = harden({
           give: [PRICE],
@@ -102,6 +106,9 @@ export const makeContract = harden(zoe => {
         });
         if (checkIfProposal(inviteHandle, sellAssetForPrice)) {
           // Save the valid offer and try to match
+
+          // IDEA: to implement matching against the best price, the orders
+          // should be sorted. (We'd also want to allow partial matches.)
           sellInviteHandles.push(inviteHandle);
           buyInviteHandles = [...zoe.getOfferStatuses(buyInviteHandles).active];
           return swapIfCanTrade(buyInviteHandles, inviteHandle);

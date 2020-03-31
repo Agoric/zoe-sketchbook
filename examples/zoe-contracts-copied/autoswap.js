@@ -1,187 +1,230 @@
 /* eslint-disable no-use-before-define */
 import harden from '@agoric/harden';
-import Nat from '@agoric/nat';
-import { makeMint } from '@agoric/ertp/core/mint';
-import { insist } from '@agoric/ertp/util/insist';
+import produceIssuer from '@agoric/ertp';
+import { assert, details } from '@agoric/assert';
 
-import { natSafeMath } from '@agoric/zoe/src/contracts/helpers/safeMath';
-import { makeHelpers } from '@agoric/zoe/src/contracts/helpers/userFlow';
-import { makeConstProductBC } from '@agoric/zoe/src/contracts/helpers/bondingCurves';
+import { makeZoeHelpers } from './helpers/zoeHelpers';
+import { makeConstProductBC } from './helpers/bondingCurves';
 
-export const makeContract = harden((zoe, terms) => {
-  // The user passes in an array of two assays for the two kinds of
-  // assets to be swapped.
-  const startingAssays = terms.assays;
+// Autoswap is a rewrite of Uniswap. Please see the documentation for
+// more https://agoric.com/documentation/zoe/guide/contracts/autoswap.html
 
-  // There is also a third assay, the assay for the liquidity token,
-  // which is created in this contract. We will return all three as
-  // the canonical array of assays for this contract
-  const liquidityMint = makeMint('liquidity');
-  const liquidityAssay = liquidityMint.getAssay();
-  const assays = [...startingAssays, liquidityAssay];
+export const makeContract = harden(zoe => {
+  // Create the liquidity mint and issuer.
+  const { mint: liquidityMint, issuer: liquidityIssuer } = produceIssuer(
+    'liquidity',
+  );
 
-  const LIQ_INDEX = 2;
-  let poolHandle;
   let liqTokenSupply = 0;
 
-  const { subtract } = natSafeMath;
-
-  return zoe.addAssays(assays).then(() => {
-    const unitOpsArray = zoe.getUnitOpsForAssays(assays);
-    unitOpsArray.forEach(
-      unitOps =>
-        insist(
-          unitOps.getExtentOps().name === 'natExtentOps',
-        )`assays must have natExtentOps`,
+  return zoe.addNewIssuer(liquidityIssuer, 'Liquidity').then(() => {
+    const { issuerKeywordRecord } = zoe.getInstanceRecord();
+    const amountMaths = zoe.getAmountMaths(issuerKeywordRecord);
+    Object.values(amountMaths).forEach(amountMath =>
+      assert(
+        amountMath.getMathHelpersName() === 'nat',
+        details`issuers must have natMathHelpers`,
+      ),
     );
     const {
       rejectOffer,
-      hasValidPayoutRules,
-      vectorWith,
-      vectorWithout,
       makeEmptyOffer,
-    } = makeHelpers(zoe, assays);
+      rejectIfNotProposal,
+      checkIfProposal,
+    } = makeZoeHelpers(zoe);
     const {
       getPrice,
       calcLiqExtentToMint,
-      calcUnitsToRemove,
-    } = makeConstProductBC(zoe, assays);
-    const getPoolUnits = () => zoe.getOffer(poolHandle).units;
+      calcAmountsToRemove,
+    } = makeConstProductBC(zoe);
 
-    return makeEmptyOffer().then(handle => {
-      poolHandle = handle;
+    return makeEmptyOffer().then(poolHandle => {
+      const getPoolAmounts = () => zoe.getOffer(poolHandle).amounts;
 
       const makeInvite = () => {
         const seat = harden({
           swap: () => {
-            let UNITS_IN_INDEX;
-            const unitsInFirst = ['offerAtMost', 'wantAtLeast', 'wantAtLeast'];
-            const unitsInSecond = ['wantAtLeast', 'offerAtMost', 'wantAtLeast'];
-            if (hasValidPayoutRules(unitsInFirst, inviteHandle)) {
-              UNITS_IN_INDEX = 0;
-            } else if (hasValidPayoutRules(unitsInSecond, inviteHandle)) {
-              UNITS_IN_INDEX = 1;
+            const { proposal } = zoe.getOffer(inviteHandle);
+            const giveTokenA = harden({
+              give: ['TokenA'],
+              want: ['TokenB', 'Liquidity'],
+            });
+            const giveTokenB = harden({
+              give: ['TokenB'],
+              want: ['TokenA', 'Liquidity'],
+            });
+            let giveKeyword;
+            let wantKeyword;
+            if (checkIfProposal(inviteHandle, giveTokenA)) {
+              giveKeyword = 'TokenA';
+              wantKeyword = 'TokenB';
+            } else if (checkIfProposal(inviteHandle, giveTokenB)) {
+              giveKeyword = 'TokenB';
+              wantKeyword = 'TokenA';
             } else {
-              throw rejectOffer(inviteHandle);
+              return rejectOffer(inviteHandle);
             }
-            const UNITS_OUT_INDEX = Nat(1 - UNITS_IN_INDEX);
-            const { newPoolUnitsArray, unitsOut } = getPrice(
-              getPoolUnits(),
-              zoe.getOffer(inviteHandle).units[UNITS_IN_INDEX],
+            if (!amountMaths.Liquidity.isEmpty(proposal.want.Liquidity)) {
+              rejectOffer(
+                inviteHandle,
+                `A Liquidity amount should not be present in a swap`,
+              );
+            }
+
+            const poolAmounts = getPoolAmounts();
+            const {
+              outputExtent,
+              newInputReserve,
+              newOutputReserve,
+            } = getPrice(
+              harden({
+                inputExtent: proposal.give[giveKeyword].extent,
+                inputReserve: poolAmounts[giveKeyword].extent,
+                outputReserve: poolAmounts[wantKeyword].extent,
+              }),
             );
-
-            const wantedUnits = zoe.getOffer(inviteHandle).units[
-              UNITS_OUT_INDEX
-            ];
-            const satisfiesWantedUnits = () =>
-              unitOpsArray[UNITS_OUT_INDEX].includes(unitsOut, wantedUnits);
-            if (!satisfiesWantedUnits()) {
+            const amountOut = amountMaths[wantKeyword].make(outputExtent);
+            const wantedAmount = proposal.want[wantKeyword];
+            const satisfiesWantedAmounts = () =>
+              amountMaths[wantKeyword].isGTE(amountOut, wantedAmount);
+            if (!satisfiesWantedAmounts()) {
               throw rejectOffer(inviteHandle);
             }
 
-            const newUserUnits = unitOpsArray.map(unitOps => unitOps.empty());
-            newUserUnits[UNITS_OUT_INDEX] = unitsOut;
+            const newUserAmounts = {
+              Liquidity: amountMaths.Liquidity.getEmpty(),
+            };
+            newUserAmounts[giveKeyword] = amountMaths[giveKeyword].getEmpty();
+            newUserAmounts[wantKeyword] = amountOut;
+
+            const newPoolAmounts = { Liquidity: poolAmounts.Liquidity };
+            newPoolAmounts[giveKeyword] = amountMaths[giveKeyword].make(
+              newInputReserve,
+            );
+            newPoolAmounts[wantKeyword] = amountMaths[wantKeyword].make(
+              newOutputReserve,
+            );
 
             zoe.reallocate(
               harden([inviteHandle, poolHandle]),
-              harden([newUserUnits, newPoolUnitsArray]),
+              harden([newUserAmounts, newPoolAmounts]),
             );
             zoe.complete(harden([inviteHandle]));
             return `Swap successfully completed.`;
           },
           addLiquidity: () => {
-            const kinds = ['offerAtMost', 'offerAtMost', 'wantAtLeast'];
-            if (!hasValidPayoutRules(kinds, inviteHandle)) {
-              throw rejectOffer(inviteHandle);
-            }
+            const expected = harden({
+              give: ['TokenA', 'TokenB'],
+              want: ['Liquidity'],
+            });
+            rejectIfNotProposal(inviteHandle, expected);
 
-            const userUnits = zoe.getOffer(inviteHandle).units;
-            const poolUnits = getPoolUnits();
+            const userAmounts = zoe.getOffer(inviteHandle).amounts;
+            const poolAmounts = getPoolAmounts();
 
             // Calculate how many liquidity tokens we should be minting.
-            // Calculations are based on the extents represented by index 0.
+            // Calculations are based on the extents represented by TokenA.
             // If the current supply is zero, start off by just taking the
-            // extent at index 0 and using it as the extent for the
+            // extent at TokenA and using it as the extent for the
             // liquidity token.
             const liquidityExtentOut = calcLiqExtentToMint(
-              liqTokenSupply,
-              poolUnits,
-              userUnits,
+              harden({
+                liqTokenSupply,
+                inputExtent: userAmounts.TokenA.extent,
+                inputReserve: poolAmounts.TokenA.extent,
+              }),
             );
 
-            const liquidityUnitsOut = unitOpsArray[LIQ_INDEX].make(
+            const liquidityAmountOut = amountMaths.Liquidity.make(
               liquidityExtentOut,
             );
 
-            const liquidityPaymentP = liquidityMint
-              .mint(liquidityUnitsOut)
-              .withdrawAll();
-            const offerRules = harden({
-              payoutRules: [
-                { kind: 'wantAtLeast', units: unitOpsArray[0].empty() },
-                { kind: 'wantAtLeast', units: unitOpsArray[1].empty() },
-                { kind: 'offerAtMost', units: liquidityUnitsOut },
-              ],
-              exitRule: {
-                kind: 'waived',
-              },
+            const liquidityPaymentP = liquidityMint.mintPayment(
+              liquidityAmountOut,
+            );
+            const proposal = harden({
+              give: { Liquidity: liquidityAmountOut },
             });
             const { inviteHandle: tempLiqHandle, invite } = zoe.makeInvite();
             const zoeService = zoe.getZoeService();
             return zoeService
               .redeem(
                 invite,
-                offerRules,
-                harden([undefined, undefined, liquidityPaymentP]),
+                proposal,
+                harden({ Liquidity: liquidityPaymentP }),
               )
               .then(() => {
                 liqTokenSupply += liquidityExtentOut;
-                const newPoolUnits = vectorWith(poolUnits, userUnits);
-                const newUserUnits = unitOpsArray.map(unitOps =>
-                  unitOps.empty(),
-                );
-                const newTempLiqUnits = unitOpsArray.map(unitOps =>
-                  unitOps.empty(),
-                );
-                newUserUnits[LIQ_INDEX] = liquidityUnitsOut;
+
+                const add = (key, obj1, obj2) =>
+                  amountMaths[key].add(obj1[key], obj2[key]);
+
+                const newPoolAmounts = harden({
+                  TokenA: add('TokenA', userAmounts, poolAmounts),
+                  TokenB: add('TokenB', userAmounts, poolAmounts),
+                  Liquidity: poolAmounts.Liquidity,
+                });
+
+                const newUserAmounts = harden({
+                  TokenA: amountMaths.TokenA.getEmpty(),
+                  TokenB: amountMaths.TokenB.getEmpty(),
+                  Liquidity: liquidityAmountOut,
+                });
+
+                const newTempLiqAmounts = harden({
+                  TokenA: amountMaths.TokenA.getEmpty(),
+                  TokenB: amountMaths.TokenB.getEmpty(),
+                  Liquidity: amountMaths.Liquidity.getEmpty(),
+                });
 
                 zoe.reallocate(
                   harden([inviteHandle, poolHandle, tempLiqHandle]),
-                  harden([newUserUnits, newPoolUnits, newTempLiqUnits]),
+                  harden([newUserAmounts, newPoolAmounts, newTempLiqAmounts]),
                 );
                 zoe.complete(harden([inviteHandle, tempLiqHandle]));
                 return 'Added liquidity.';
               });
           },
           removeLiquidity: () => {
-            const kinds = ['wantAtLeast', 'wantAtLeast', 'offerAtMost'];
-            if (!hasValidPayoutRules(kinds, inviteHandle)) {
-              throw rejectOffer(`The offer to remove liquidity was invalid`);
-            }
-            const userUnits = zoe.getOffer(inviteHandle).units;
-            const liquidityUnitsIn = userUnits[LIQ_INDEX];
+            const expected = harden({
+              want: ['TokenA', 'TokenB'],
+              give: ['Liquidity'],
+            });
+            rejectIfNotProposal(inviteHandle, expected);
 
-            const poolUnits = getPoolUnits();
+            const userAmounts = zoe.getOffer(inviteHandle).amounts;
+            const liquidityExtentIn = userAmounts.Liquidity.extent;
 
-            const newUserUnits = calcUnitsToRemove(
-              liqTokenSupply,
-              poolUnits,
-              liquidityUnitsIn,
+            const poolAmounts = getPoolAmounts();
+
+            const newUserAmounts = calcAmountsToRemove(
+              harden({
+                liqTokenSupply,
+                poolAmounts,
+                liquidityExtentIn,
+              }),
             );
 
-            const newPoolUnits = vectorWith(
-              vectorWithout(poolUnits, newUserUnits),
-              [
-                unitOpsArray[0].empty(),
-                unitOpsArray[1].empty(),
-                liquidityUnitsIn,
-              ],
-            );
-            liqTokenSupply = subtract(liqTokenSupply, liquidityUnitsIn.extent);
+            const newPoolAmounts = harden({
+              TokenA: amountMaths.TokenA.subtract(
+                poolAmounts.TokenA,
+                newUserAmounts.TokenA,
+              ),
+              TokenB: amountMaths.TokenB.subtract(
+                poolAmounts.TokenB,
+                newUserAmounts.TokenB,
+              ),
+              Liquidity: amountMaths.Liquidity.add(
+                poolAmounts.Liquidity,
+                amountMaths.Liquidity.make(liquidityExtentIn),
+              ),
+            });
+
+            liqTokenSupply -= liquidityExtentIn;
 
             zoe.reallocate(
               harden([inviteHandle, poolHandle]),
-              harden([newUserUnits, newPoolUnits]),
+              harden([newUserAmounts, newPoolAmounts]),
             );
             zoe.complete(harden([inviteHandle]));
             return 'Liquidity successfully removed.';
@@ -197,16 +240,42 @@ export const makeContract = harden((zoe, terms) => {
         invite: makeInvite(),
         publicAPI: {
           /**
-           * `getPrice` calculates the result of a trade, given a certain units
+           * `getPrice` calculates the result of a trade, given a certain amount
            * of digital assets in.
-           * @param {units} unitsIn - the units of digital assets to be sent in
+           * @param {object} amountInObj - the amount of digital
+           * assets to be sent in, keyed by keyword
            */
-          getPrice: unitsIn => getPrice(getPoolUnits(), unitsIn).unitsOut,
-          getLiquidityAssay: () => liquidityAssay,
-          getPoolUnits,
+          getPrice: amountInObj => {
+            const inKeywords = Object.getOwnPropertyNames(amountInObj);
+            assert(
+              inKeywords.length === 1,
+              details`argument to 'getPrice' must have one keyword`,
+            );
+            const [inKeyword] = inKeywords;
+            assert(
+              ['TokenA', 'TokenB'].includes(inKeyword),
+              details`keyword ${inKeyword} was not valid`,
+            );
+            const inputExtent = amountMaths[inKeyword].getExtent(
+              amountInObj[inKeyword],
+            );
+            const poolAmounts = getPoolAmounts();
+            const inputReserve = poolAmounts[inKeyword].extent;
+            const outKeyword = inKeyword === 'TokenA' ? 'TokenB' : 'TokenA';
+            const outputReserve = poolAmounts[outKeyword].extent;
+            const { outputExtent } = getPrice(
+              harden({
+                inputExtent,
+                inputReserve,
+                outputReserve,
+              }),
+            );
+            return amountMaths[outKeyword].make(outputExtent);
+          },
+          getLiquidityIssuer: () => liquidityIssuer,
+          getPoolAmounts,
           makeInvite,
         },
-        terms: { assays },
       });
     });
   });

@@ -7,11 +7,14 @@
   "author": "Agoric",
   "license": "Apache-2.0",
   "dependencies": {
+    "@agoric/assert": "0.0.1",
     "@agoric/bundle-source": "^1.0.4",
-    "@agoric/ertp": "^0.2.0",
+    "@agoric/ertp": "^0.4.2",
+    "@agoric/eventual-send": "0.5.1",
     "@agoric/harden": "^0.0.4",
     "@agoric/nat": "^3.0.1",
-    "@agoric/zoe": "^0.2.0",
+    "@agoric/registrar": "^0.0.1",
+    "@agoric/zoe": "0.3.0",
     "esm": "^3.2.25"
   },
   "devDependencies": {

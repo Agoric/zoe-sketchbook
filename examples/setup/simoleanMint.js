@@ -1,4 +1,7 @@
-import { makeMint } from '@agoric/ertp/core/mint';
+import produceIssuer from '@agoric/ertp';
 
-export const simoleanMint = makeMint('simoleans');
-export const simoleanAssay = simoleanMint.getAssay();
+const simoleanIssuerResults = produceIssuer('simolean');
+
+export const simoleanMint = simoleanIssuerResults.mint;
+export const simoleanIssuer = simoleanIssuerResults.issuer;
+export const simoleanAmountMath = simoleanIssuerResults.amountMath;

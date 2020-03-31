@@ -7,7 +7,7 @@ const coveredCall = `${__dirname}/../zoe-contracts-copied/coveredCall.js`;
 const publicAuction = `${__dirname}/../zoe-contracts-copied/publicAuction.js`;
 const atomicSwap = `${__dirname}/../zoe-contracts-copied/atomicSwap.js`;
 const simpleExchange = `${__dirname}/../zoe-contracts-copied/simpleExchange.js`;
-const autoswap  = `${__dirname}/../zoe-contracts-copied/autoswap.js`;
+const autoswap = `${__dirname}/../zoe-contracts-copied/autoswap.js`;
 
 // Normally, Zoe would already exist and we would have a long-lived
 // reference to it. However, here in the sketchbook, we will need to
