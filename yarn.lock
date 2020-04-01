@@ -136,7 +136,7 @@
   resolved "https://registry.yarnpkg.com/@agoric/make-hardener/-/make-hardener-0.0.4.tgz#9b5d6692bc2fbbac2fff0a6682959ac5e69c582d"
   integrity sha512-0k/wGkIVQO3IY7p/H/5OS3BIXsRK9Qb7nHnqyvj6hzvSyumwgPp8e4rz5QaVWSen43TGJl+zQn4mW9ZZShT1aw==
 
-"@agoric/make-promise@^0.0.2":
+"@agoric/make-promise@0.0.2", "@agoric/make-promise@^0.0.2":
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/@agoric/make-promise/-/make-promise-0.0.2.tgz#f96bbc0c11916eb84c7ab9290e7a3a5aaa801304"
   integrity sha512-1uHieExBA0/lrbNFJP4FS9DFRXDQwhC/Zv4YT2FSfxP3KapN8QZZIBgFHlDuXBGME/yiKCokCuEnPXgqror8kw==
@@ -197,6 +197,14 @@
   dependencies:
     "@agoric/harden" "^0.0.4"
 
+"@agoric/store@0.0.2", "@agoric/store@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@agoric/store/-/store-0.0.2.tgz#13a98f2582c5fa1be810719651ff8554d741c0c6"
+  integrity sha512-wbXM+Acx/WwUhLf93L32VomdBJtF3Z4oPvwNvJ4pd9QXur9G5Rhj4GElwov2ONf8Gw9hR1zsdOTqR88BkDUGNw==
+  dependencies:
+    "@agoric/assert" "^0.0.2"
+    "@agoric/harden" "^0.0.4"
+
 "@agoric/store@^0.0.1":
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/@agoric/store/-/store-0.0.1.tgz#d393acca799078deb200ebe3b86d908b67f71d66"
@@ -204,14 +212,6 @@
   dependencies:
     "@agoric/harden" "^0.0.4"
     "@agoric/insist" "^0.0.1"
-
-"@agoric/store@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@agoric/store/-/store-0.0.2.tgz#13a98f2582c5fa1be810719651ff8554d741c0c6"
-  integrity sha512-wbXM+Acx/WwUhLf93L32VomdBJtF3Z4oPvwNvJ4pd9QXur9G5Rhj4GElwov2ONf8Gw9hR1zsdOTqR88BkDUGNw==
-  dependencies:
-    "@agoric/assert" "^0.0.2"
-    "@agoric/harden" "^0.0.4"
 
 "@agoric/tame-metering@^1.1.0":
   version "1.1.0"

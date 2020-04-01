@@ -33,7 +33,6 @@ const makeAlice = (zoe, installations, walletData) => {
         exit: { onDemand: null },
       });
       const payments = {
-        Price: simoleanIssuer.makeEmptyPurse().withdraw(simoleans(0)),
         Asset: wallet.withdraw('moola', moola(3)),
       };
 

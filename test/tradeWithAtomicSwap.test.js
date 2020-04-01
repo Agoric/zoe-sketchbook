@@ -14,7 +14,6 @@ import {
   simoleanIssuer,
   simoleanAmountMath,
 } from '../examples/setup/simoleanMint';
-import { makeInitialPayment } from '../examples/setup/initialPayments';
 
 import makeBob from '../examples/tradeWithAtomicSwap/bob';
 import makeAlice from '../examples/tradeWithAtomicSwap/alice';
@@ -22,13 +21,13 @@ import makeAlice from '../examples/tradeWithAtomicSwap/alice';
 test('perform trade using atomic swap contract', async t => {
   const { zoe, installations } = await setupZoe();
 
-  const inviteissuer = zoe.getInviteIssuer();
+  const inviteIssuer = zoe.getInviteIssuer();
 
   const moola = moolaIssuer.getAmountMath().make;
   const simoleans = simoleanIssuer.getAmountMath().make;
 
   const registrar = makeRegistrar();
-  const inviteissuerRegKey = registrar.register('inviteissuer', inviteissuer);
+  const inviteIssuerRegKey = registrar.register('inviteIssuer', inviteIssuer);
   const moolaIssuerRegKey = registrar.register('moolaIssuer', moolaIssuer);
   const simoleanIssuerRegKey = registrar.register(
     'simoleanIssuer',
@@ -43,19 +42,17 @@ test('perform trade using atomic swap contract', async t => {
         regKey: simoleanIssuerRegKey,
         petname: 'simolean',
       },
-      { issuer: inviteissuer, regKey: inviteissuerRegKey, petname: 'invite' },
+      { issuer: inviteIssuer, regKey: inviteIssuerRegKey, petname: 'invite' },
     ],
   });
 
-  const aliceMoolaPayment = makeInitialPayment(moolaMint, moolaAmountMath, 3);
+  const aliceMoolaPayment = moolaMint.mintPayment(moolaAmountMath.make(3));
   const alice = makeAlice(zoe, installations, walletData);
   const aliceInbox = alice.getInbox();
   aliceInbox.receive(moolaIssuerRegKey, aliceMoolaPayment);
 
-  const bobSimoleanPayment = makeInitialPayment(
-    simoleanMint,
-    simoleanAmountMath,
-    7,
+  const bobSimoleanPayment = simoleanMint.mintPayment(
+    simoleanAmountMath.make(7),
   );
   const bob = makeBob(zoe, installations, walletData);
   const bobInbox = bob.getInbox();

@@ -3,18 +3,17 @@ import { test } from 'tape-promise/tape';
 import {
   paymentForAlice,
   baytownBucks,
-  baytownBucksBundle,
+  baytownBucksIssuer,
 } from '../examples/baytownBucks';
 
+const baytownBucksAmountMath = baytownBucksIssuer.getAmountMath();
 // Let's make sure that the payment we would send to Alice has the
 // correct balance.
 test('gets the balance of the payment for Alice', t => {
-  const { amountMath } = baytownBucksBundle;
-  const { issuer } = baytownBucksBundle;
   t.ok(
-    amountMath.isEqual(
-      issuer.getAmountOf(paymentForAlice),
-      baytownBucks.make(10),
+    baytownBucksAmountMath.isEqual(
+      baytownBucksIssuer.getAmountOf(paymentForAlice),
+      baytownBucks(10),
     ),
   );
   t.end();

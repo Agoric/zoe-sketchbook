@@ -36,7 +36,6 @@ const makeBob = (zoe, installations, walletData) => {
     assert(issuerKeywordRecord.Price === simoleanIssuer, details`wrong issuer`);
 
     const payments = {
-      Asset: moolaIssuer.makeEmptyPurse().withdraw(moola(0)),
       Price: wallet.withdraw('simolean', simoleans(7)),
     };
 

@@ -1,5 +1,5 @@
 import harden from '@agoric/harden';
-import makeStore from './store';
+import makeStore from '@agoric/store';
 
 const makeWallet = initialWalletData => {
   const petnameToPurse = makeStore();
