@@ -1,12 +1,19 @@
 import { test } from 'tape-promise/tape';
 import harden from '@agoric/harden';
 
-import { makeRegistrar } from '@agoric/ertp/more/registrar/registrar';
+import { makeRegistrar } from '@agoric/registrar';
 
 import { setupZoe } from '../examples/setup/setupZoe';
-import { moolaMint, moolaAssay } from '../examples/setup/moolaMint';
-import { simoleanMint, simoleanAssay } from '../examples/setup/simoleanMint';
-import { makeInitialPayment } from '../examples/setup/initialPayments';
+import {
+  moolaMint,
+  moolaIssuer,
+  moolaAmountMath,
+} from '../examples/setup/moolaMint';
+import {
+  simoleanMint,
+  simoleanIssuer,
+  simoleanAmountMath,
+} from '../examples/setup/simoleanMint';
 
 import makeBob from '../examples/tradeWithAtomicSwap/bob';
 import makeAlice from '../examples/tradeWithAtomicSwap/alice';
@@ -14,43 +21,42 @@ import makeAlice from '../examples/tradeWithAtomicSwap/alice';
 test('perform trade using atomic swap contract', async t => {
   const { zoe, installations } = await setupZoe();
 
-  const inviteAssay = zoe.getInviteAssay();
+  const inviteIssuer = zoe.getInviteIssuer();
 
-  const moolaUnitOps = moolaAssay.getUnitOps();
-  const simoleanUnitOps = simoleanAssay.getUnitOps();
-
-  const moola = moolaAssay.getUnitOps().make;
-  const simoleans = simoleanAssay.getUnitOps().make;
+  const moola = moolaIssuer.getAmountMath().make;
+  const simoleans = simoleanIssuer.getAmountMath().make;
 
   const registrar = makeRegistrar();
-  const inviteAssayRegKey = registrar.register('inviteAssay', inviteAssay);
-  const moolaAssayRegKey = registrar.register('moolaAssay', moolaAssay);
-  const simoleanAssayRegKey = registrar.register(
-    'simoleanAssay',
-    simoleanAssay,
+  const inviteIssuerRegKey = registrar.register('inviteIssuer', inviteIssuer);
+  const moolaIssuerRegKey = registrar.register('moolaIssuer', moolaIssuer);
+  const simoleanIssuerRegKey = registrar.register(
+    'simoleanIssuer',
+    simoleanIssuer,
   );
 
   const walletData = harden({
-    assays: [
-      { assay: moolaAssay, regKey: moolaAssayRegKey, petname: 'moola' },
+    issuers: [
+      { issuer: moolaIssuer, regKey: moolaIssuerRegKey, petname: 'moola' },
       {
-        assay: simoleanAssay,
-        regKey: simoleanAssayRegKey,
+        issuer: simoleanIssuer,
+        regKey: simoleanIssuerRegKey,
         petname: 'simolean',
       },
-      { assay: inviteAssay, regKey: inviteAssayRegKey, petname: 'invite' },
+      { issuer: inviteIssuer, regKey: inviteIssuerRegKey, petname: 'invite' },
     ],
   });
 
-  const aliceMoolaPayment = makeInitialPayment(moolaMint, moolaAssay, 3);
+  const aliceMoolaPayment = moolaMint.mintPayment(moolaAmountMath.make(3));
   const alice = makeAlice(zoe, installations, walletData);
   const aliceInbox = alice.getInbox();
-  aliceInbox.receive(moolaAssayRegKey, aliceMoolaPayment);
+  aliceInbox.receive(moolaIssuerRegKey, aliceMoolaPayment);
 
-  const bobSimoleanPayment = makeInitialPayment(simoleanMint, simoleanAssay, 7);
+  const bobSimoleanPayment = simoleanMint.mintPayment(
+    simoleanAmountMath.make(7),
+  );
   const bob = makeBob(zoe, installations, walletData);
   const bobInbox = bob.getInbox();
-  bobInbox.receive(simoleanAssayRegKey, bobSimoleanPayment);
+  bobInbox.receive(simoleanIssuerRegKey, bobSimoleanPayment);
 
   bob.connectWith('alice', aliceInbox);
   alice.connectWith('bob', bobInbox);
@@ -60,13 +66,18 @@ test('perform trade using atomic swap contract', async t => {
   const aliceWallet = alice.getWallet();
   const bobWallet = bob.getWallet();
 
-  t.ok(moolaUnitOps.equals(aliceWallet.getBalance('moola'), moola(0)));
+  t.ok(moolaAmountMath.isEqual(aliceWallet.getBalance('moola'), moola(0)));
   t.ok(
-    simoleanUnitOps.equals(aliceWallet.getBalance('simolean'), simoleans(7)),
+    simoleanAmountMath.isEqual(
+      aliceWallet.getBalance('simolean'),
+      simoleans(7),
+    ),
   );
 
-  t.ok(moolaUnitOps.equals(bobWallet.getBalance('moola'), moola(3)));
-  t.ok(simoleanUnitOps.equals(bobWallet.getBalance('simolean'), simoleans(0)));
+  t.ok(moolaAmountMath.isEqual(bobWallet.getBalance('moola'), moola(3)));
+  t.ok(
+    simoleanAmountMath.isEqual(bobWallet.getBalance('simolean'), simoleans(0)),
+  );
 
   t.end();
 });

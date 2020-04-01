@@ -1,37 +1,31 @@
 import harden from '@agoric/harden';
-import makeStore from './store';
-
-// {
-//   assay,
-//   regKey,
-//   petname,
-// }
+import makeStore from '@agoric/store';
 
 const makeWallet = initialWalletData => {
   const petnameToPurse = makeStore();
-  const petnameToAssay = makeStore();
-  const petnameToUnitOps = makeStore();
-  const regKeyToAssayPetname = makeStore();
-  const assayPetnameToRegKey = makeStore();
+  const petnameToIssuer = makeStore();
+  const petnameToAmountMath = makeStore();
+  const regKeyToIssuerPetname = makeStore();
+  const issuerPetnameToRegKey = makeStore();
 
-  const assayPetnameToCallback = makeStore();
+  const issuerPetnameToCallback = makeStore();
 
   // contacts
   const petnameToInbox = makeStore();
 
   // external facet. Arguments should not be trusted.
   const inbox = harden({
-    receive: (assayRegKey, payment) => {
-      const assayPetname = regKeyToAssayPetname.get(assayRegKey);
-      // TODO: have more than one purse per assay
-      const purse = petnameToPurse.get(assayPetname);
+    receive: (issuerRegKey, payment) => {
+      const issuerPetname = regKeyToIssuerPetname.get(issuerRegKey);
+      // TODO: allow more than one purse per issuer
+      const purse = petnameToPurse.get(issuerPetname);
 
-      if (assayPetnameToCallback.has(assayPetname)) {
-        const callback = assayPetnameToCallback.get(assayPetname);
-        const assay = petnameToAssay.get(assayPetname);
-        assay.claimAll(payment).then(callback);
+      if (issuerPetnameToCallback.has(issuerPetname)) {
+        const callback = issuerPetnameToCallback.get(issuerPetname);
+        const issuer = petnameToIssuer.get(issuerPetname);
+        issuer.claim(payment).then(callback);
       } else {
-        purse.depositAll(payment);
+        purse.deposit(payment);
       }
     },
   });
@@ -40,45 +34,46 @@ const makeWallet = initialWalletData => {
   const wallet = harden({
     deposit: (pursePetName, payment) => {
       const purse = petnameToPurse.get(pursePetName);
-      purse.depositAll(payment);
+      purse.deposit(payment);
     },
     withdraw: (pursePetName, units) => {
       const purse = petnameToPurse.get(pursePetName);
       return purse.withdraw(units);
     },
-    addAssay: (assayPetname, regKey, assay) => {
-      petnameToAssay.init(assayPetname, assay);
-      regKeyToAssayPetname.init(regKey, assayPetname);
-      assayPetnameToRegKey.init(assayPetname, regKey);
-      petnameToUnitOps.init(assayPetname, assay.getUnitOps());
+    addIssuer: (issuerPetname, regKey, issuer) => {
+      petnameToIssuer.init(issuerPetname, issuer);
+      regKeyToIssuerPetname.init(regKey, issuerPetname);
+      issuerPetnameToRegKey.init(issuerPetname, regKey);
+      petnameToAmountMath.init(issuerPetname, issuer.getAmountMath());
     },
-    makeEmptyPurse: (assayPetname, pursePetname, memo = 'purse') => {
-      const assay = petnameToAssay.get(assayPetname);
-      const purse = assay.makeEmptyPurse(memo);
+    makeEmptyPurse: (issuerPetname, pursePetname, memo = 'purse') => {
+      const issuer = petnameToIssuer.get(issuerPetname);
+      const purse = issuer.makeEmptyPurse(memo);
       petnameToPurse.init(pursePetname, purse);
     },
-    getUnitOps: petname => petnameToUnitOps.get(petname),
-    getAssay: petnameToAssay.get,
+    getAmountMath: petname => petnameToAmountMath.get(petname),
+    getIssuer: petnameToIssuer.get,
 
     getInbox: () => inbox,
 
     connectWith: (petname, otherInbox) => {
       petnameToInbox.init(petname, otherInbox);
     },
-    send: (inboxPetname, assayPetname, payment) => {
+    send: (inboxPetname, issuerPetname, payment) => {
       const otherInbox = petnameToInbox.get(inboxPetname);
-      const assayRegKey = assayPetnameToRegKey.get(assayPetname);
-      otherInbox.receive(assayRegKey, payment);
+      const issuerRegKey = issuerPetnameToRegKey.get(issuerPetname);
+      otherInbox.receive(issuerRegKey, payment);
     },
-    registerCallback: (assayPetname, callback) =>
-      assayPetnameToCallback.init(assayPetname, callback),
-    getBalance: pursePetname => petnameToPurse.get(pursePetname).getBalance(),
+    registerCallback: (issuerPetname, callback) =>
+      issuerPetnameToCallback.init(issuerPetname, callback),
+    getBalance: pursePetname =>
+      petnameToPurse.get(pursePetname).getCurrentAmount(),
   });
 
-  // initialize with starting assays and purses
-  initialWalletData.assays.forEach(({ assay, regKey, petname }) => {
-    wallet.addAssay(petname, regKey, assay);
-    // reuse assay petname for purse petname
+  // initialize with starting issuers and purses
+  initialWalletData.issuers.forEach(({ issuer, regKey, petname }) => {
+    wallet.addIssuer(petname, regKey, issuer);
+    // reuse issuer petname for purse petname
     wallet.makeEmptyPurse(petname, petname);
   });
 

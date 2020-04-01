@@ -1,4 +1,7 @@
-import { makeMint } from '@agoric/ertp/core/mint';
+import produceIssuer from '@agoric/ertp';
 
-export const moolaMint = makeMint('moola');
-export const moolaAssay = moolaMint.getAssay();
+const moolaIssuerResults = produceIssuer('moola');
+
+export const moolaMint = moolaIssuerResults.mint;
+export const moolaIssuer = moolaIssuerResults.issuer;
+export const moolaAmountMath = moolaIssuerResults.amountMath;
