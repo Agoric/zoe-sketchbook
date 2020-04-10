@@ -15,7 +15,7 @@ import { makeZoeHelpers, defaultAcceptanceMsg } from './helpers/zoeHelpers';
  * Price is a limit that may be improved on. This simple exchange does
  * not partially fill orders.
  */
-export const makeContract = harden(zoe => {
+export const makeContract = harden((zoe) => {
   const PRICE = 'Price';
   const ASSET = 'Asset';
 
@@ -48,7 +48,7 @@ export const makeContract = harden(zoe => {
   function flattenOrders(offerHandles) {
     const result = zoe
       .getOffers(zoe.getOfferStatuses(offerHandles).active)
-      .map(offerRecord => flattenOffer(offerRecord));
+      .map((offerRecord) => flattenOffer(offerRecord));
     return result;
   }
 

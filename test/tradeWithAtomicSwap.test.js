@@ -18,7 +18,7 @@ import {
 import makeBob from '../examples/tradeWithAtomicSwap/bob';
 import makeAlice from '../examples/tradeWithAtomicSwap/alice';
 
-test('perform trade using atomic swap contract', async t => {
+test('perform trade using atomic swap contract', async (t) => {
   const { zoe, installations } = await setupZoe();
 
   const inviteIssuer = zoe.getInviteIssuer();

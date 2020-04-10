@@ -1,7 +1,7 @@
 import harden from '@agoric/harden';
 import makeStore from '@agoric/store';
 
-const makeWallet = initialWalletData => {
+const makeWallet = (initialWalletData) => {
   const petnameToPurse = makeStore();
   const petnameToIssuer = makeStore();
   const petnameToAmountMath = makeStore();
@@ -51,7 +51,7 @@ const makeWallet = initialWalletData => {
       const purse = issuer.makeEmptyPurse(memo);
       petnameToPurse.init(pursePetname, purse);
     },
-    getAmountMath: petname => petnameToAmountMath.get(petname),
+    getAmountMath: (petname) => petnameToAmountMath.get(petname),
     getIssuer: petnameToIssuer.get,
 
     getInbox: () => inbox,
@@ -66,7 +66,7 @@ const makeWallet = initialWalletData => {
     },
     registerCallback: (issuerPetname, callback) =>
       issuerPetnameToCallback.init(issuerPetname, callback),
-    getBalance: pursePetname =>
+    getBalance: (pursePetname) =>
       petnameToPurse.get(pursePetname).getCurrentAmount(),
   });
 

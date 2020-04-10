@@ -5,7 +5,7 @@ import Nat from '@agoric/nat';
 import { defaultAcceptanceMsg, makeZoeHelpers } from './helpers/zoeHelpers';
 import { secondPriceLogic, closeAuction } from './helpers/auctions';
 
-export const makeContract = harden(zoe => {
+export const makeContract = harden((zoe) => {
   const {
     rejectOffer,
     canTradeWith,
@@ -88,7 +88,7 @@ export const makeContract = harden(zoe => {
   return harden({
     invite: makeSellerInvite(),
     publicAPI: {
-      makeInvites: numInvites => {
+      makeInvites: (numInvites) => {
         if (auctionedAssets === undefined) {
           throw new Error(`No assets are up for auction.`);
         }

@@ -9,7 +9,7 @@ import { makeConstProductBC } from './helpers/bondingCurves';
 // Autoswap is a rewrite of Uniswap. Please see the documentation for
 // more https://agoric.com/documentation/zoe/guide/contracts/autoswap.html
 
-export const makeContract = harden(zoe => {
+export const makeContract = harden((zoe) => {
   // Create the liquidity mint and issuer.
   const { mint: liquidityMint, issuer: liquidityIssuer } = produceIssuer(
     'liquidity',
@@ -20,7 +20,7 @@ export const makeContract = harden(zoe => {
   return zoe.addNewIssuer(liquidityIssuer, 'Liquidity').then(() => {
     const { issuerKeywordRecord } = zoe.getInstanceRecord();
     const amountMaths = zoe.getAmountMaths(issuerKeywordRecord);
-    Object.values(amountMaths).forEach(amountMath =>
+    Object.values(amountMaths).forEach((amountMath) =>
       assert(
         amountMath.getMathHelpersName() === 'nat',
         details`issuers must have natMathHelpers`,
@@ -38,7 +38,7 @@ export const makeContract = harden(zoe => {
       calcAmountsToRemove,
     } = makeConstProductBC(zoe);
 
-    return makeEmptyOffer().then(poolHandle => {
+    return makeEmptyOffer().then((poolHandle) => {
       const getPoolAmounts = () => zoe.getOffer(poolHandle).amounts;
 
       const makeInvite = () => {
@@ -245,7 +245,7 @@ export const makeContract = harden(zoe => {
            * @param {object} amountInObj - the amount of digital
            * assets to be sent in, keyed by keyword
            */
-          getPrice: amountInObj => {
+          getPrice: (amountInObj) => {
             const inKeywords = Object.getOwnPropertyNames(amountInObj);
             assert(
               inKeywords.length === 1,

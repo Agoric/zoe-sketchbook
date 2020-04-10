@@ -15,7 +15,7 @@ const autoswap = `${__dirname}/../zoe-contracts-copied/autoswap.js`;
 export const setupZoe = async () => {
   const zoe = makeZoe({ require });
 
-  const packAndInstall = contractRoot =>
+  const packAndInstall = (contractRoot) =>
     bundleSource(contractRoot).then(({ source, moduleFormat }) =>
       zoe.install(source, moduleFormat),
     );

@@ -17,5 +17,8 @@ module.exports = {
     'no-unused-expressions': 'off',
     'no-loop-func': 'off',
     'import/prefer-default-export': 'off', // contrary to Agoric standard
+    // These were necessary when upgrading packages to maintain the
+    // same code
+    'no-ternary': 'off',
   },
 };

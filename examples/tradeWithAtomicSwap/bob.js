@@ -6,7 +6,7 @@ import makeWallet from '../setup/wallet';
 const makeBob = (zoe, installations, walletData) => {
   const wallet = makeWallet(walletData);
 
-  const matchOffer = async inviteP => {
+  const matchOffer = async (inviteP) => {
     const moolaAmountMath = wallet.getAmountMath('moola');
     const simoleanAmountMath = wallet.getAmountMath('simolean');
 
@@ -45,10 +45,10 @@ const makeBob = (zoe, installations, walletData) => {
       payments,
     );
 
-    payout.then(async payoutPs => {
+    payout.then(async (payoutPs) => {
       const { Price: simoleanPayoutP, Asset: moolaPayoutP } = payoutPs;
-      await moolaPayoutP.then(m => wallet.deposit('moola', m));
-      await simoleanPayoutP.then(p => wallet.deposit('simolean', p));
+      await moolaPayoutP.then((m) => wallet.deposit('moola', m));
+      await simoleanPayoutP.then((p) => wallet.deposit('simolean', p));
     });
 
     return seat.matchOffer();

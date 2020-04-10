@@ -7,26 +7,27 @@
   "author": "Agoric",
   "license": "Apache-2.0",
   "dependencies": {
-    "@agoric/assert": "0.0.1",
-    "@agoric/bundle-source": "^1.0.4",
-    "@agoric/ertp": "^0.4.2",
-    "@agoric/eventual-send": "0.5.1",
-    "@agoric/harden": "^0.0.4",
-    "@agoric/make-promise": "0.0.2",
+    "@agoric/assert": "^0.0.3",
+    "@agoric/bundle-source": "^1.1.1",
+    "@agoric/ertp": "^0.5.1",
+    "@agoric/eventual-send": "^0.7.0",
+    "@agoric/harden": "0.0.4",
+    "@agoric/make-promise": "^0.0.3",
     "@agoric/nat": "^3.0.1",
-    "@agoric/registrar": "^0.0.1",
-    "@agoric/store": "0.0.2",
-    "@agoric/zoe": "0.3.0",
+    "@agoric/registrar": "^0.0.3",
+    "@agoric/same-structure": "^0.0.3",
+    "@agoric/store": "^0.0.3",
+    "@agoric/zoe": "^0.4.0",
     "esm": "^3.2.25"
   },
   "devDependencies": {
     "eslint": "^6.7.2",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-config-jessie": "^0.0.4",
+    "eslint-config-jessie": "^0.0.6",
     "eslint-config-prettier": "^6.7.0",
-    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-prettier": "^3.1.1",
-    "prettier": "^1.19.1",
+    "prettier": "^2.0.4",
     "tap-spec": "^5.0.0",
     "tape": "^4.11.0",
     "tape-promise": "^4.0.0"
@@ -35,5 +36,12 @@
     "test": "tape -r esm 'test/**/*.test.js' | tap-spec",
     "lint": "eslint --fix '**/*.{js,jsx}'",
     "lint-jessie": "eslint -c '.eslintrc-jessie.js' --fix '**/*.{js,jsx}'"
+  },
+  "eslintIgnore": [
+    "bundle-*.js"
+  ],
+  "prettier": {
+    "trailingComma": "all",
+    "singleQuote": true
   }
 }

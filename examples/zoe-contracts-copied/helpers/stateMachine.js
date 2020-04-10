@@ -13,13 +13,13 @@ const makeStateMachine = (initialState, allowedTransitionsArray) => {
   let state = initialState;
   const allowedTransitions = new Map(allowedTransitionsArray);
   return harden({
-    canTransitionTo: nextState =>
+    canTransitionTo: (nextState) =>
       allowedTransitions.get(state).includes(nextState),
-    transitionTo: nextState => {
+    transitionTo: (nextState) => {
       assert(allowedTransitions.get(state).includes(nextState));
       state = nextState;
     },
-    getStatus: _ => state,
+    getStatus: (_) => state,
   });
 };
 harden(makeStateMachine);

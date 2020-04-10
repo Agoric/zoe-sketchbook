@@ -5,9 +5,9 @@ import { sameStructure } from '@agoric/same-structure';
 export const defaultRejectMsg = `The offer was invalid. Please check your refund.`;
 export const defaultAcceptanceMsg = `The offer has been accepted. Once the contract has been completed, please check your payout`;
 
-export const getKeys = obj => harden(Object.getOwnPropertyNames(obj || {}));
+export const getKeys = (obj) => harden(Object.getOwnPropertyNames(obj || {}));
 
-export const makeZoeHelpers = zoe => {
+export const makeZoeHelpers = (zoe) => {
   const { issuerKeywordRecord } = zoe.getInstanceRecord();
   const amountMaths = zoe.getAmountMaths(issuerKeywordRecord);
   const zoeService = zoe.getZoeService();
@@ -41,7 +41,7 @@ export const makeZoeHelpers = zoe => {
     return sameStructure(getKeys(actual), expectedKeys);
   };
   const helpers = harden({
-    assertKeywords: expected => {
+    assertKeywords: (expected) => {
       // 'actual' is sorted in alphabetical order by Zoe
       const { keywords: actual } = zoe.getInstanceRecord();
       expected = [...expected]; // in case hardened
@@ -68,7 +68,7 @@ export const makeZoeHelpers = zoe => {
         check(actual.exit, expected.exit)
       );
     },
-    getActiveOffers: handles =>
+    getActiveOffers: (handles) =>
       zoe.getOffers(zoe.getOfferStatuses(handles).active),
     rejectOffer,
     canTradeWith: (leftInviteHandle, rightInviteHandle) => {
@@ -76,7 +76,7 @@ export const makeZoeHelpers = zoe => {
       const { proposal: right } = zoe.getOffer(rightInviteHandle);
       const { keywords } = zoe.getInstanceRecord();
       const satisfied = (want, give) =>
-        keywords.every(keyword => {
+        keywords.every((keyword) => {
           if (want[keyword]) {
             return amountMaths[keyword].isGTE(give[keyword], want[keyword]);
           }

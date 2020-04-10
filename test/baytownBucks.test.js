@@ -9,10 +9,10 @@ import {
 const baytownBucksAmountMath = baytownBucksIssuer.getAmountMath();
 // Let's make sure that the payment we would send to Alice has the
 // correct balance.
-test('gets the balance of the payment for Alice', t => {
+test('gets the balance of the payment for Alice', async (t) => {
   t.ok(
     baytownBucksAmountMath.isEqual(
-      baytownBucksIssuer.getAmountOf(paymentForAlice),
+      await baytownBucksIssuer.getAmountOf(paymentForAlice),
       baytownBucks(10),
     ),
   );
