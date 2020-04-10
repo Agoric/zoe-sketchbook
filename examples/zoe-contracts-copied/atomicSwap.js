@@ -3,11 +3,11 @@ import harden from '@agoric/harden';
 
 import { makeZoeHelpers } from './helpers/zoeHelpers';
 
-export const makeContract = harden(zoe => {
+export const makeContract = harden((zoe) => {
   const { swap, assertKeywords, rejectIfNotProposal } = makeZoeHelpers(zoe);
   assertKeywords(harden(['Asset', 'Price']));
 
-  const makeMatchingInvite = firstInviteHandle => {
+  const makeMatchingInvite = (firstInviteHandle) => {
     const seat = harden({
       matchOffer: () => swap(firstInviteHandle, inviteHandle),
     });

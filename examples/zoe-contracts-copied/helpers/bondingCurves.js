@@ -4,7 +4,7 @@ import { natSafeMath } from './safeMath';
 
 const { add, subtract, multiply, floorDivide } = natSafeMath;
 
-export const makeConstProductBC = zoe => {
+export const makeConstProductBC = (zoe) => {
   return harden({
     /**
      * Contains the logic for calculating how much should be given

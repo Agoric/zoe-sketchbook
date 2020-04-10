@@ -39,7 +39,7 @@ export const closeAuction = (
     harden(allBidHandles),
   );
 
-  const getBids = offer => offer.amounts.Bid;
+  const getBids = (offer) => offer.amounts.Bid;
   const bids = zoe.getOffers(activeBidHandles).map(getBids);
   const assetAmount = zoe.getOffer(sellerInviteHandle).offerRules.offer.Asset;
 

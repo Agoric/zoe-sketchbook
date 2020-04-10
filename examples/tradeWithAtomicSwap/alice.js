@@ -43,11 +43,11 @@ const makeAlice = (zoe, installations, walletData) => {
       const bobInviteP = seat.makeFirstOffer();
       wallet.send('bob', 'invite', bobInviteP);
 
-      return payout.then(async payoutPs => {
+      return payout.then(async (payoutPs) => {
         const { Price: simoleanPayoutP, Asset: moolaPayoutP } = payoutPs;
 
-        await moolaPayoutP.then(m => wallet.deposit('moola', m));
-        await simoleanPayoutP.then(p => wallet.deposit('simolean', p));
+        await moolaPayoutP.then((m) => wallet.deposit('moola', m));
+        await simoleanPayoutP.then((p) => wallet.deposit('simolean', p));
         return 'swap successful';
       });
     },
