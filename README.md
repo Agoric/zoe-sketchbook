@@ -5,8 +5,7 @@ Draft and lightly test your smart contact code here.
 
 ## Getting started
 
-The following instructions are written for MacOS. If you are
-using a different operating system or having any difficulties, please
+The following instructions are written for MacOS. If they don't work for you, or you can contribute instructions for a different platform, please
 create a [new Github
 issue](https://github.com/Agoric/zoe-sketchbook/issues/new) describing
 the problem.
