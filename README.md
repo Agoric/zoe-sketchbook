@@ -36,7 +36,7 @@ In the terminal, navigate to the folder in which you would like to
 download Zoe Sketchbook (we recommend a `code` directory, created by entering
 `mkdir code`):
 
-```
+```sh
 cd code
 git clone https://github.com/Agoric/zoe-sketchbook.git
 cd zoe-sketchbook
@@ -92,3 +92,32 @@ and write out your own contract. You will probably want to create a
 test file for your contract as well to make sure it works as intended. 
 
 Happy contracting!
+
+### Further Instructions
+
+#### Installing NVM
+
+1. Install [nvm](https://github.com/nvm-sh/nvm#install--update-script)
+
+```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+```
+
+2. It may ask you to have a bash profile so that it can add an export
+for NVM. You can create a profile file by entering:
+
+```
+touch ~/.bash_profile
+```
+
+If you needed to add a bash profile, rerun step 1.
+
+3. Close and reopen terminal
+4. Enter:
+
+```sh
+nvm install 12.16.2
+nvm use 12.16.2
+```
+Now you can switch back and forth between installed version of Node by
+using the `nvm use` command.
